@@ -4,14 +4,29 @@ A side-by-side comparison of the **exact same** UART character reception applica
 
 ## 📊 Metrics Comparison
 
-| Metric | C/FreeRTOS (STM32CubeIDE) | Rust/Embassy | Improvement |
-|--------|---------------------------|--------------|-------------|
-| **User Code (Lines)** | 2,479 lines | 367 lines | 🦀 **85% less code** |
-| **Total Code (with headers)** | 3,456 lines | 367 lines | 🦀 **89% less code** |
-| **Flash Usage (text)** | 52,100 bytes | 18,928 bytes | 🦀 **64% smaller** |
+### 🔧 Debug Build Comparison
+
+| Metric | C/FreeRTOS (Debug) | Rust/Embassy (Debug) | Improvement |
+|--------|-------------------|---------------------|-------------|
+| **Flash Usage (text)** | 52,100 bytes | 35,344 bytes | 🦀 **32% smaller** |
 | **RAM Usage (bss)** | 37,432 bytes | 1,720 bytes | 🦀 **95% less RAM!** |
 | **Data Section** | 472 bytes | 80 bytes | 🦀 **83% less** |
-| **Total Binary Size** | 90,004 bytes | 20,728 bytes | 🦀 **77% smaller** |
+| **Total Binary Size** | 90,004 bytes | 37,144 bytes | 🦀 **59% smaller** |
+
+### 🚀 Release Build Comparison
+
+| Metric | C/FreeRTOS (Release) | Rust/Embassy (Release) | Improvement |
+|--------|---------------------|----------------------|-------------|
+| **Flash Usage (text)** | 26,476 bytes | 18,928 bytes | 🦀 **29% smaller** |
+| **RAM Usage (bss)** | 37,428 bytes | 1,720 bytes | 🦀 **95% less RAM!** |
+| **Data Section** | 108 bytes | 80 bytes | 🦀 **26% less** |
+| **Total Binary Size** | 64,012 bytes | 20,728 bytes | 🦀 **68% smaller** |
+
+### 📝 Code Size Comparison
+
+| Metric | C/FreeRTOS (STM32CubeIDE) | Rust/Embassy | Improvement |
+|--------|---------------------------|--------------|-------------|
+| **Total Code (with headers)** | 3,456 lines | 376 lines | 🦀 **89% less code** |
 | **Driver Files** | 26 HAL + 10 FreeRTOS | 0 (managed by cargo) | 🦀 Rust |
 | **Config Files** | .ioc, .cproject, etc. | Cargo.toml only | 🦀 Rust |
 
