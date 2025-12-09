@@ -8,30 +8,30 @@ A side-by-side comparison of the **exact same** UART character reception applica
 
 | Metric | C/FreeRTOS (Debug) | Rust/Embassy (Debug) | Improvement |
 |--------|-------------------|---------------------|-------------|
-| **Flash Usage (text)** | 52,100 bytes | 35,344 bytes | 🦀 **32% smaller** |
-| **RAM Usage (bss)** | 37,432 bytes | 1,720 bytes | 🦀 **95% less RAM!** |
-| **Data Section** | 472 bytes | 80 bytes | 🦀 **83% less** |
-| **Total Binary Size** | 90,004 bytes | 37,144 bytes | 🦀 **59% smaller** |
+| **Flash Usage (text)** | 52,100 bytes | 37,208 bytes | 🦀 **29% smaller** |
+| **RAM Usage (bss)** | 37,432 bytes | 1,728 bytes | 🦀 **95% less RAM!** |
+| **Data Section** | 472 bytes | 120 bytes | 🦀 **75% less** |
+| **Total Binary Size** | 90,004 bytes | 39,056 bytes | 🦀 **57% smaller** |
 
 ### 🚀 Release Build Comparison
 
 | Metric | C/FreeRTOS (Release) | Rust/Embassy (Release) | Improvement |
 |--------|---------------------|----------------------|-------------|
-| **Flash Usage (text)** | 26,476 bytes | 18,928 bytes | 🦀 **29% smaller** |
-| **RAM Usage (bss)** | 37,428 bytes | 1,720 bytes | 🦀 **95% less RAM!** |
-| **Data Section** | 108 bytes | 80 bytes | 🦀 **26% less** |
-| **Total Binary Size** | 64,012 bytes | 20,728 bytes | 🦀 **68% smaller** |
+| **Flash Usage (text)** | 26,476 bytes | 20,008 bytes | 🦀 **24% smaller** |
+| **RAM Usage (bss)** | 37,428 bytes | 1,728 bytes | 🦀 **95% less RAM!** |
+| **Data Section** | 108 bytes | 120 bytes | ⚖️ Similar |
+| **Total Binary Size** | 64,012 bytes | 21,856 bytes | 🦀 **66% smaller** |
 
 ### 📝 Code Size Comparison
 
 | Metric | C/FreeRTOS (STM32CubeIDE) | Rust/Embassy | Improvement |
 |--------|---------------------------|--------------|-------------|
-| **Total Code (with headers)** | 3,456 lines | 376 lines | 🦀 **89% less code** |
+| **Total Code (with headers)** | 3,456 lines | 405 lines | 🦀 **88% less code** |
 | **Driver Files** | 26 HAL + 10 FreeRTOS | 0 (managed by cargo) | 🦀 Rust |
 | **Config Files** | .ioc, .cproject, etc. | Cargo.toml only | 🦀 Rust |
 
 > **Note**: Both implementations do exactly the same thing: receive single characters via UART
-> and print "Nuevo dato recibido: X" or "Terminal Limpiada" on Enter.
+> and print "Nuevo dato recibido: X" or "Terminal Limpiada" on Enter via the same UART interface.
 
 ## 🔍 Code Comparison
 
@@ -58,9 +58,15 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
 **Rust/Embassy:**
 ```rust
-pub async fn write_byte(&self, byte: u8) {
-    let mut tx = self.tx.lock().await;
-    let _ = tx.write(&[byte]).await;
+/// Shared TX handle protected by a Mutex (equivalent to xSemaphore in C)
+pub static TX: Mutex<ThreadModeRawMutex, Option<Usart1Tx>> = Mutex::new(None);
+
+/// Write a string to UART (equivalent to printf in C)
+async fn uart_print(msg: &[u8]) {
+    let mut tx_guard = TX.lock().await;
+    if let Some(ref mut tx) = *tx_guard {
+        let _ = tx.write(msg).await;
+    }
 }
 ```
 
@@ -104,9 +110,17 @@ pub async fn serial_rx_task(mut rx: Usart1Rx) {
             Ok(_) => {
                 let c = buf[0];
                 if c == b'\r' {
-                    info!("Terminal Limpiada");
+                    // Clear screen and print via UART (same as C version)
+                    uart_print(b"\x1b[1;1H\x1b[2JTerminal Limpiada\r\n").await;
                 } else {
-                    info!("Nuevo dato recibido: {}", c as char);
+                    // Build message and print via UART
+                    let mut msg: [u8; 32] = [0; 32];
+                    let prefix = b"Nuevo dato recibido: ";
+                    msg[..prefix.len()].copy_from_slice(prefix);
+                    msg[prefix.len()] = c;
+                    msg[prefix.len() + 1] = b'\r';
+                    msg[prefix.len() + 2] = b'\n';
+                    uart_print(&msg[..prefix.len() + 3]).await;
                 }
             }
             Err(_) => error!("UART read error"),
@@ -124,7 +138,7 @@ pub async fn serial_rx_task(mut rx: Usart1Rx) {
 - `osKernelInitialize()`, `osKernelStart()`
 - Global variables for handles everywhere
 
-**Rust/Embassy (133 lines in main.rs):**
+**Rust/Embassy (139 lines in main.rs):**
 ```rust
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {

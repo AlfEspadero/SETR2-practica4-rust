@@ -23,7 +23,7 @@ use embassy_stm32::{Config, bind_interrupts, peripherals, usart};
 use embassy_time::Timer;
 use {defmt_rtt as _, panic_probe as _};
 
-use crate::serial_task::serial_rx_task;
+use crate::serial_task::{serial_rx_task, TX};
 
 // Bind USART1 interrupts to the Embassy interrupt handler
 bind_interrupts!(struct Irqs {
@@ -103,7 +103,13 @@ async fn main(spawner: Spawner) {
 	.unwrap();
 
 	// Split UART into TX and RX halves
-	let (_tx, rx) = uart.split();
+	let (tx, rx) = uart.split();
+
+	// Initialize the shared TX handle (equivalent to xSemaphore creation)
+	{
+		let mut tx_guard = TX.lock().await;
+		*tx_guard = Some(tx);
+	}
 
 	info!("USART1 initialized @ 115200 baud");
 
