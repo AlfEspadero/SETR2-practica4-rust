@@ -14,17 +14,17 @@
 //! - `HAL_UART_RxCpltCallback` -> Handled automatically by Embassy async read
 
 use defmt::*;
+use embassy_stm32::mode::Async;
 use embassy_stm32::usart::{UartRx, UartTx};
-use embassy_stm32::peripherals::{DMA1_CH4, DMA1_CH5, USART1};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::mutex::Mutex;
 use embedded_io_async::Write;
 
-/// Type alias for USART1 TX with DMA
-pub type Usart1Tx = UartTx<'static, USART1, DMA1_CH4>;
+/// Type alias for USART1 TX with DMA (Async mode)
+pub type Usart1Tx = UartTx<'static, Async>;
 
-/// Type alias for USART1 RX with DMA
-pub type Usart1Rx = UartRx<'static, USART1, DMA1_CH5>;
+/// Type alias for USART1 RX with DMA (Async mode)
+pub type Usart1Rx = UartRx<'static, Async>;
 
 /// Serial Writer - Thread-safe UART transmitter
 ///
@@ -64,13 +64,13 @@ impl SerialWriter {
     /// Send a string over UART
     pub async fn write_str(&self, s: &str) {
         let mut tx = self.tx.lock().await;
-        let _ = tx.write_all(s.as_bytes()).await;
+        let _ = Write::write_all(&mut *tx, s.as_bytes()).await;
     }
 
     /// Send a buffer over UART
     pub async fn write_buf(&self, buf: &[u8]) {
         let mut tx = self.tx.lock().await;
-        let _ = tx.write_all(buf).await;
+        let _ = Write::write_all(&mut *tx, buf).await;
     }
 }
 

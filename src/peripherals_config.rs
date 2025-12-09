@@ -125,13 +125,9 @@ pub mod sensor_addresses {
 ///     Default::default(),
 /// );
 /// ```
-pub async fn check_hts221<T: embassy_stm32::i2c::Instance, TXDMA, RXDMA>(
-    i2c: &mut embassy_stm32::i2c::I2c<'_, T, TXDMA, RXDMA>,
-) -> Result<bool, embassy_stm32::i2c::Error>
-where
-    TXDMA: embassy_stm32::i2c::TxDma<T>,
-    RXDMA: embassy_stm32::i2c::RxDma<T>,
-{
+pub async fn check_hts221(
+    i2c: &mut embassy_stm32::i2c::I2c<'_, embassy_stm32::mode::Async, embassy_stm32::i2c::mode::Master>,
+) -> Result<bool, embassy_stm32::i2c::Error> {
     use sensor_addresses::HTS221;
 
     // Read WHO_AM_I register (0x0F) to verify communication
@@ -153,13 +149,9 @@ where
 /// This demonstrates how to use the I2C peripheral to read sensor data.
 /// Note: This is a simplified conversion. For accurate readings, you need
 /// to read the calibration coefficients from the sensor.
-pub async fn read_hts221_temperature<T: embassy_stm32::i2c::Instance, TXDMA, RXDMA>(
-    i2c: &mut embassy_stm32::i2c::I2c<'_, T, TXDMA, RXDMA>,
-) -> Result<f32, embassy_stm32::i2c::Error>
-where
-    TXDMA: embassy_stm32::i2c::TxDma<T>,
-    RXDMA: embassy_stm32::i2c::RxDma<T>,
-{
+pub async fn read_hts221_temperature(
+    i2c: &mut embassy_stm32::i2c::I2c<'_, embassy_stm32::mode::Async, embassy_stm32::i2c::mode::Master>,
+) -> Result<f32, embassy_stm32::i2c::Error> {
     use sensor_addresses::HTS221;
 
     // First verify the sensor is present
