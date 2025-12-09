@@ -8,6 +8,8 @@
 //! - SPI3: For external devices (WiFi, BLE, etc.)
 //! - QSPI: For external flash (not fully supported in embassy-stm32 yet)
 
+#![allow(dead_code)]
+
 use defmt::*;
 use embassy_stm32::i2c::Config as I2cConfig;
 use embassy_stm32::spi::Config as SpiConfig;
