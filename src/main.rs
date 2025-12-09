@@ -21,18 +21,14 @@ use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_stm32::usart::{Config as UartConfig, Uart};
 use embassy_stm32::{bind_interrupts, peripherals, usart, Config};
 use embassy_time::Timer;
-use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
-use crate::serial_task::{serial_echo_task, SerialWriter};
+use crate::serial_task::serial_rx_task;
 
 // Bind USART1 interrupts to the Embassy interrupt handler
 bind_interrupts!(struct Irqs {
     USART1 => usart::InterruptHandler<peripherals::USART1>;
 });
-
-/// Static cell for the serial writer (equivalent to the global huart1 in C)
-static SERIAL_WRITER: StaticCell<SerialWriter> = StaticCell::new();
 
 /// Configure the system clocks to match the original C project
 /// Original config: MSI @ 4MHz -> PLL -> 80MHz SYSCLK
@@ -107,7 +103,7 @@ async fn main(spawner: Spawner) {
     .unwrap();
 
     // Split UART into TX and RX halves
-    let (tx, rx) = uart.split();
+    let (_tx, rx) = uart.split();
 
     info!("USART1 initialized @ 115200 baud");
 
@@ -115,23 +111,12 @@ async fn main(spawner: Spawner) {
     // Create Serial Objects (equivalent to CreateSerialObjects)
     // =========================================================================
 
-    // Initialize the serial writer (equivalent to xSemaphore + huart1)
-    let writer = SERIAL_WRITER.init(SerialWriter::new(tx));
-
-    // Spawn the serial echo task (equivalent to xTaskCreate for SerialRxTask)
-    // Using echo task so that characters are sent back to UART (visible in picocom)
-    spawner.spawn(serial_echo_task(rx, writer)).unwrap();
+    // Spawn the serial RX task (equivalent to xTaskCreate for SerialRxTask)
+    // This matches the original C implementation exactly - single character processing
+    // Output is visible via RTT (probe-rs), not UART
+    spawner.spawn(serial_rx_task(rx)).unwrap();
 
     info!("Serial tasks created");
-
-    // =========================================================================
-    // Send welcome message
-    // =========================================================================
-    writer.write_str("Practica4 - Rust Embassy Port\r\n").await;
-    writer
-        .write_str("UART echo demo - type characters:\r\n")
-        .await;
-
     info!("Entering main loop...");
 
     // =========================================================================

@@ -1,19 +1,22 @@
 # STM32 Embedded Development: C/FreeRTOS vs Rust/Embassy
 
-A side-by-side comparison of the same UART echo application implemented in both paradigms.
+A side-by-side comparison of the **exact same** UART character reception application implemented in both paradigms.
 
 ## 📊 Metrics Comparison
 
-| Metric | C/FreeRTOS (STM32CubeIDE) | Rust/Embassy | Winner |
-|--------|---------------------------|--------------|--------|
-| **User Code (Lines)** | 2,479 lines | 530 lines | 🦀 Rust (78% less) |
-| **Total Code (with headers)** | 3,456 lines | 530 lines | 🦀 Rust (85% less) |
-| **Flash Usage (text)** | 52,100 bytes | 22,620 bytes | 🦀 Rust (57% smaller) |
-| **RAM Usage (bss)** | 37,432 bytes | 1,980 bytes | 🦀 Rust (95% less!) |
-| **Data Section** | 472 bytes | 80 bytes | 🦀 Rust (83% less) |
-| **Total Binary Size** | 90,004 bytes | 24,680 bytes | 🦀 Rust (73% smaller) |
+| Metric | C/FreeRTOS (STM32CubeIDE) | Rust/Embassy | Improvement |
+|--------|---------------------------|--------------|-------------|
+| **User Code (Lines)** | 2,479 lines | 367 lines | 🦀 **85% less code** |
+| **Total Code (with headers)** | 3,456 lines | 367 lines | 🦀 **89% less code** |
+| **Flash Usage (text)** | 52,100 bytes | 18,928 bytes | 🦀 **64% smaller** |
+| **RAM Usage (bss)** | 37,432 bytes | 1,720 bytes | 🦀 **95% less RAM!** |
+| **Data Section** | 472 bytes | 80 bytes | 🦀 **83% less** |
+| **Total Binary Size** | 90,004 bytes | 20,728 bytes | 🦀 **77% smaller** |
 | **Driver Files** | 26 HAL + 10 FreeRTOS | 0 (managed by cargo) | 🦀 Rust |
 | **Config Files** | .ioc, .cproject, etc. | Cargo.toml only | 🦀 Rust |
+
+> **Note**: Both implementations do exactly the same thing: receive single characters via UART
+> and print "Nuevo dato recibido: X" or "Terminal Limpiada" on Enter.
 
 ## 🔍 Code Comparison
 
@@ -106,7 +109,7 @@ pub async fn serial_rx_task(mut rx: Usart1Rx) {
 - `osKernelInitialize()`, `osKernelStart()`
 - Global variables for handles everywhere
 
-**Rust/Embassy (148 lines in main.rs):**
+**Rust/Embassy (133 lines in main.rs):**
 ```rust
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -115,9 +118,9 @@ async fn main(spawner: Spawner) {
     
     let uart = Uart::new(p.USART1, p.PB7, p.PB6, Irqs, 
                          p.DMA1_CH4, p.DMA1_CH5, uart_config).unwrap();
-    let (tx, rx) = uart.split();
+    let (_tx, rx) = uart.split();
     
-    spawner.spawn(serial_echo_task(rx, writer)).unwrap();
+    spawner.spawn(serial_rx_task(rx)).unwrap();
 }
 ```
 
@@ -153,7 +156,7 @@ async fn main(spawner: Spawner) {
 - Built-in formatting with `rustfmt`
 
 ### 6. **Smaller Binary Size**
-- 73% smaller total binary
+- 77% smaller total binary
 - 95% less RAM usage
 - No RTOS task stacks needed
 
@@ -202,8 +205,8 @@ practica4-rust/
 ├── Cargo.toml          # Dependencies & config (50 lines)
 ├── .cargo/config.toml  # Build target config
 ├── src/
-│   ├── main.rs         # Entry point (148 lines)
-│   ├── serial_task.rs  # UART handling (196 lines)
+│   ├── main.rs         # Entry point (133 lines)
+│   ├── serial_task.rs  # UART handling (48 lines)
 │   └── peripherals_config.rs  # Sensor configs (186 lines)
 └── target/             # Build output (managed by cargo)
 ```
