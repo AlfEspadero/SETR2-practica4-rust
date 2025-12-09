@@ -19,7 +19,7 @@ A side-by-side comparison of the **exact same** UART character reception applica
 |--------|---------------------|----------------------|-------------|
 | **Flash Usage (text)** | 26,476 bytes | 20,008 bytes | 🦀 **24% smaller** |
 | **RAM Usage (bss)** | 37,428 bytes | 1,728 bytes | 🦀 **95% less RAM!** |
-| **Data Section** | 108 bytes | 120 bytes | ⚖️ Similar |
+| **Data Section** | 108 bytes | 120 bytes | 🦀 **<span style="color:red">11% bigger</span>** |
 | **Total Binary Size** | 64,012 bytes | 21,856 bytes | 🦀 **66% smaller** |
 
 ### 📝 Code Size Comparison
