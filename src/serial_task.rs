@@ -22,27 +22,27 @@ pub type Usart1Rx = UartRx<'static, Async>;
 /// already handles the interrupt-driven reception internally.
 #[embassy_executor::task]
 pub async fn serial_rx_task(mut rx: Usart1Rx) {
-    info!("SerialRxTask started");
+	info!("SerialRxTask started");
 
-    let mut buf = [0u8; 1];
+	let mut buf = [0u8; 1];
 
-    loop {
-        // Read one byte (equivalent to xQueueReceive with portMAX_DELAY)
-        match rx.read(&mut buf).await {
-            Ok(_) => {
-                let c = buf[0];
+	loop {
+		// Read one byte (equivalent to xQueueReceive with portMAX_DELAY)
+		match rx.read(&mut buf).await {
+			Ok(_) => {
+				let c = buf[0];
 
-                if c == b'\r' {
-                    // Original: printf("Terminal Limpiada\r\n");
-                    info!("Terminal Limpiada");
-                } else {
-                    // Original: printf("Nuevo dato recibido: %c\r\n", c);
-                    info!("Nuevo dato recibido: {}", c as char);
-                }
-            }
-            Err(_e) => {
-                error!("UART read error");
-            }
-        }
-    }
+				if c == b'\r' {
+					// Original: printf("Terminal Limpiada\r\n");
+					info!("Terminal Limpiada");
+				} else {
+					// Original: printf("Nuevo dato recibido: %c\r\n", c);
+					info!("Nuevo dato recibido: {}", c as char);
+				}
+			}
+			Err(_e) => {
+				error!("UART read error");
+			}
+		}
+	}
 }
