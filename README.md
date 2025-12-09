@@ -2,6 +2,8 @@
 
 This project is a complete port of the original C/FreeRTOS STM32L475 project to Rust using the Embassy async embedded framework.
 
+For a detailed comparison between the original C/FreeRTOS implementation and this Rust/Embassy port, please refer to the [COMPARISON.md](./COMPARISON.md) file.
+
 ## Target Hardware
 
 - **Board**: B-L475E-IOT01A Discovery Kit
